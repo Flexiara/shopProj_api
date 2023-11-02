@@ -1,9 +1,12 @@
 const User = require("../Models/user.modal")
 const bcrypt = require ("bcrypt")
 const saltRounds = 10; // Adjust the number of rounds as needed
+const fs = require("fs");
+const path = require("path");
+const ObjectId = require("mongodb").ObjectId;
 
 const loginAcc = async (req, res, next) => {
-    console.log(req.body)
+
     email = req.body.email
     password = req.body.password
     try {
@@ -25,46 +28,54 @@ const loginAcc = async (req, res, next) => {
     }
 }
 
-const registerAcc = async (req, res, next) => {
-    try {
-        const data = new User(req.body) 
-        existEmail = await User.findOne({ email: data.email })
+const registerAcc = async (req, res, next) => { 
+    let imageurl= ""
+    try { 
+        const  userDetails = JSON.parse(req.body.data);
+        existEmail = await User.findOne({ email: userDetails.email })
         if (!existEmail) {
-            const hashPassword = bcrypt.hashSync(data.password, saltRounds);
-            data.password = hashPassword
+            const hashPassword = bcrypt.hashSync(userDetails.password, saltRounds);
+            userDetails.password = hashPassword
+            const imageData = JSON.parse(req.body.image);
+            if(imageData.base64 !== ""){
+                const imageData = JSON.parse(req.body.image);
+                const base64ImageData = imageData; 
+                const originalFilename = userDetails.fileName;           
+                const uploadDirectory = path.join(__dirname, "..","..","upload","avators");
+                const imageBuffer = Buffer.from(base64ImageData.replace(/^data:image\/\w+;base64,/, ""), "base64");
+                if (!fs.existsSync(uploadDirectory)) {
+                    fs.mkdirSync(uploadDirectory);
+                }
+                var imagePath = path.join(uploadDirectory, `${originalFilename}`);
+                fs.writeFileSync(imagePath, imageBuffer);
+                imageurl =  `/avator/${originalFilename}`
+            }
+            userDetails.avator =  imageurl
+            const data = new User(userDetails);
             const result = await data.save()
-            res.json("Success")
+            res.json(result)
         } else {
             throw ("Email Aleady Used!")
         }     
     }
     catch (err) {
+        console.log("errrr",err);
         next(err)
     }
 }
 
-const logHome =  (req, res, next) => {
-    try {
-console.log("asdasda");
-res.status(200).send("yessss")
-
-    }
-    catch(err) {
-        next(err)
-    }
+const getUserDetails = async (req, res, next) => {
+   const userId = req.query.id
+ console.log("resssss>>>>>>>", userId);
+ try{
+   result = await User.findOne({_id: new ObjectId(userId)})
+   res.json(result)
+ }
+ catch (err) {
+    next(err)
+ }
 }
-const logNoHome =  (req, res, next) => {
-    try {
-console.log("noooooo");
-res.status(200).send("nooooo")
-    }
-    catch(err) {
-        next(err)
-    }
-}
-
-
 
 module.exports = {
-    registerAcc, loginAcc, logHome ,logNoHome
+    registerAcc, loginAcc, getUserDetails
 }
