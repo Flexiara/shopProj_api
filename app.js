@@ -27,13 +27,9 @@ app.use((req, res, next) => {
 });
 app.use(upload.single("image")); // Assuming "image" is the field name for the uploaded image
 app.use('/avator', express.static('D:/Alliancetest/shopProj_api/upload/avators'));
+app.use('/products', express.static('D:/Alliancetest/shopProj_api/upload/products'));
 app.use(routes)
 
-
-app.get('/get-excel', (req, res) => {
-  const filePath = path.join(__dirname, '', "upload","avators", "Presidents.xlsx");
-  res.sendFile(filePath);
-});
 //DB connect//
 mongoose
 .connect('mongodb+srv://root:root@cluster0.bffwlke.mongodb.net/Shop',

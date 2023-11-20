@@ -4,6 +4,7 @@ const saltRounds = 10; // Adjust the number of rounds as needed
 const fs = require("fs");
 const path = require("path");
 const ObjectId = require("mongodb").ObjectId;
+const jwt = require ("jsonwebtoken")
 
 const loginAcc = async (req, res, next) => {
 
@@ -13,9 +14,16 @@ const loginAcc = async (req, res, next) => {
         result = await User.findOne({ email: email })
         if (result) {
             passwordPass = bcrypt.compareSync(password, result.password)
-            console.log(passwordPass);
             if (passwordPass) {
-                res.json(result)
+                const token = createToken(result._id)
+             
+                res.json({
+                    _id: result._id,
+                    avator: result.avator,
+                    token: token,
+                    firstName: result.firstName
+
+                })
             } else {
                 res.status(400).send("Wrong Password")
             }
@@ -32,13 +40,15 @@ const registerAcc = async (req, res, next) => {
     let imageurl= ""
     try { 
         const  userDetails = JSON.parse(req.body.data);
+
         existEmail = await User.findOne({ email: userDetails.email })
-        if (!existEmail) {
+        if (!existEmail) { 
             const hashPassword = bcrypt.hashSync(userDetails.password, saltRounds);
             userDetails.password = hashPassword
-            const imageData = JSON.parse(req.body.image);
-            if(imageData.base64 !== ""){
-                const imageData = JSON.parse(req.body.image);
+            const imageData = JSON.parse(req.body?.image);
+
+            if(imageData.base64){
+                // const imageData = JSON.parse(req.body.image);
                 const base64ImageData = imageData; 
                 const originalFilename = userDetails.fileName;           
                 const uploadDirectory = path.join(__dirname, "..","..","upload","avators");
@@ -49,8 +59,9 @@ const registerAcc = async (req, res, next) => {
                 var imagePath = path.join(uploadDirectory, `${originalFilename}`);
                 fs.writeFileSync(imagePath, imageBuffer);
                 imageurl =  `/avator/${originalFilename}`
+                userDetails.avator =  imageurl
             }
-            userDetails.avator =  imageurl
+            
             const data = new User(userDetails);
             const result = await data.save()
             res.json(result)
@@ -59,14 +70,12 @@ const registerAcc = async (req, res, next) => {
         }     
     }
     catch (err) {
-        console.log("errrr",err);
         next(err)
     }
 }
 
 const getUserDetails = async (req, res, next) => {
    const userId = req.query.id
- console.log("resssss>>>>>>>", userId);
  try{
    result = await User.findOne({_id: new ObjectId(userId)})
    res.json(result)
@@ -74,6 +83,10 @@ const getUserDetails = async (req, res, next) => {
  catch (err) {
     next(err)
  }
+}
+
+const createToken = (id) => {
+    return jwt.sign({id}, "abcdefg")
 }
 
 module.exports = {

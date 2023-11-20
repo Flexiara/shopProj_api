@@ -5,13 +5,16 @@ const { ObjectId } = require("mongodb");
 const productsSchema = mongoose.Schema({
     itemName : String,
     category : String,
-    itemDetails : String,
+    description : String,
+    image: String,
+    price: Number,
+    promo: Number,
+    category: Number,
     createdDate: {
         type: Date,
         default: Date.now,
     },
-    createdBy : ObjectId,
-    rank : Number,
+    createdBy : String,
 });
 
 module.exports = mongoose.model('Products',productsSchema);
