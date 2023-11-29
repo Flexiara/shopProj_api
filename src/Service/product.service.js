@@ -6,7 +6,7 @@ const mongoose = require('mongoose');
 
 const getProductsDetail = async (pageNumber) => {
     try {
-        const skipNumber =(pageNumber - 1) * 6;
+        const skipNumber =(pageNumber - 1) * 10;
         const result = await productsModal.aggregate([
             {
                 $lookup: {
@@ -20,7 +20,7 @@ const getProductsDetail = async (pageNumber) => {
                 $skip: skipNumber
             },
             {
-                $limit: 6
+                $limit: 10
             },
             {
                 $addFields: {
@@ -68,11 +68,11 @@ try {
 const purchaseItem = async (userId, productId, quantity) => {
     try {
 let result =await productDetailsModal.findOneAndUpdate({productId: new mongoose.Types.ObjectId(productId)},
-// {$push: { purchasedBy: userId}}, {},{new: true}
+{$push: { purchasedBy: {userId : userId, quantity: quantity }}},
 {$set : {
-    quantity: quantity,
+    quantity: "$quantity" - quantity,
     
-}}
+}}, {new: true}
 )
      return result;
     } catch (error){

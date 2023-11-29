@@ -4,7 +4,8 @@ const saltRounds = 10; // Adjust the number of rounds as needed
 const fs = require("fs");
 const path = require("path");
 const ObjectId = require("mongodb").ObjectId;
-const jwt = require ("jsonwebtoken")
+const jwt = require ("jsonwebtoken");
+const wishlistNotiModal = require("../Models/wishlist-noti.modal");
 
 const loginAcc = async (req, res, next) => {
 
@@ -63,7 +64,9 @@ const registerAcc = async (req, res, next) => {
             }
             
             const data = new User(userDetails);
-            const result = await data.save()
+            const result = await data.save();
+            const userId = result._id
+             await  wishlistNotiModal.create({userId})
             res.json(result)
         } else {
             throw ("Email Aleady Used!")

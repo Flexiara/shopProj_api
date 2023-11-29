@@ -8,6 +8,10 @@ const productDetailsSchema = mongoose.Schema({
     purchasedBy: Array,
     status: Boolean,
     quantity: Number,
+    promoPrice: Number,
+    promoDescription: String,
+    startDate: Date,
+    endDate: Date
     // color: String,
     // size: String
 });
